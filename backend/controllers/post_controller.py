@@ -191,9 +191,13 @@ def post_verification_controller(request):
             "message": "Invalid token"
         }), 401
 
-    if user_id != token:
+    if user_id != token and verification_method=="face-scan":
         return jsonify({
             "message": "Face does not match the signed-in account"
+        }), 401
+    elif user_id != token and verification_method=="credential":
+        return jsonify({
+            "message": "Credentials does not match the credentials of signed-in account"
         }), 401
 
     try:

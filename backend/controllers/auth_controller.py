@@ -205,5 +205,6 @@ def user_info_controller(request):
     return jsonify({
         "message": "User details fetched successfully",
         "username": is_valid.get("username"),
-        "email": is_valid.get("email")
+        "email": is_valid.get("email"),
+        "embedding_status": is_valid.get("embedding_status")
     }), 200
