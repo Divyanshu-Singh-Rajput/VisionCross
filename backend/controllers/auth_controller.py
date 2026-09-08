@@ -15,7 +15,7 @@ def register_user_controller(request):
     email = data.get("email")
     password = data.get("password")
     embedding_status = False
-    clearance_level = 0
+    clearance_level = 4
 
     is_valid = validate_details(username, email, password, embedding_status, clearance_level)
 
