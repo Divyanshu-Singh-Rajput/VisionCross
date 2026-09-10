@@ -15,4 +15,4 @@ app.register_blueprint(auth_routes, url_prefix = "/accounts")
 app.register_blueprint(post_routes, url_prefix = "/posts")
 
 if __name__ == "__main__":
-    app.run(port=3000, debug=True)
+    app.run(port=5000, debug=True)
