@@ -1,5 +1,5 @@
 from flask import Blueprint, request
-from controllers.auth_controller import register_user_controller, login_controller, upload_photos_controller, face_scan_login_controller, user_info_controller
+from controllers.auth_controller import register_user_controller, login_controller, logout_controller, upload_photos_controller, face_scan_login_controller, user_info_controller
 
 auth_routes = Blueprint("auth_routes", __name__)
 
@@ -18,6 +18,10 @@ def login_user():
 @auth_routes.route("/login/facescan", methods=["POST"])
 def face_scan_login():
     return face_scan_login_controller(request)
+
+@auth_routes.route("/logout", methods=["POST"])
+def logout_user():
+    return logout_controller(request)
 
 @auth_routes.route("/info", methods=["GET"])
 def user_information():

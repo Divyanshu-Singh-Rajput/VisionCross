@@ -116,6 +116,11 @@ def login_controller(request):
 
     return response, 200
 
+def logout_controller(request):
+    response = jsonify({"message": "Logged out successfully"})
+    response.delete_cookie("token")
+    return response, 200
+
 def upload_photos_controller(request):
     response = store_embeddings(request)
 
@@ -206,5 +211,6 @@ def user_info_controller(request):
         "message": "User details fetched successfully",
         "username": is_valid.get("username"),
         "email": is_valid.get("email"),
-        "embedding_status": is_valid.get("embedding_status")
+        "embedding_status": is_valid.get("embedding_status"),
+        "clearance_level": is_valid.get("clearance_level")
     }), 200
