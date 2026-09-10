@@ -2,6 +2,20 @@
 
 ![Next.js](https://img.shields.io/badge/Next.js-000000?style=flat-square&logo=nextdotjs&logoColor=white) ![React](https://img.shields.io/badge/React-20232A?style=flat-square&logo=react&logoColor=61DAFB) ![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=flat-square&logo=tailwind-css&logoColor=white) ![Python](https://img.shields.io/badge/Python-3776AB?style=flat-square&logo=python&logoColor=white) ![Flask](https://img.shields.io/badge/Flask-000000?style=flat-square&logo=flask&logoColor=white) ![PyTorch](https://img.shields.io/badge/PyTorch-EE4C2C?style=flat-square&logo=pytorch&logoColor=white) ![OpenCV](https://img.shields.io/badge/OpenCV-5C3EE8?style=flat-square&logo=opencv&logoColor=white) ![MongoDB](https://img.shields.io/badge/MongoDB-47A248?style=flat-square&logo=mongodb&logoColor=white) ![JWT](https://img.shields.io/badge/JWT-000000?style=flat-square&logo=jsonwebtokens&logoColor=white) ![Pydantic](https://img.shields.io/badge/Pydantic-E92063?style=flat-square&logo=pydantic&logoColor=white)
 
+---
+
+## Table of Contents
+
+- [About the Project](#about-the-project)
+- [Prerequisites](#prerequisites)
+- [Setup & Installation](#setup--installation)
+  - [1. Clone the Repository](#1-clone-the-repository)
+  - [2. Backend Setup (Flask & PyTorch)](#2-backend-setup-flask--pytorch)
+  - [3. Frontend Setup (Next.js & Tailwind CSS)](#3-frontend-setup-nextjs--tailwind-css)
+- [Running the Project](#running-the-project)
+
+---
+
 ## About the Project
 
 **VisionCross** is an AI-driven biometric clearance and access control gateway. It secures virtual meetings, sensitive sessions, and classified links from unauthorized entry (such as zoombombing or credential leaks) without requiring manual waiting room approval by hosts.
