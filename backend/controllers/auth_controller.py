@@ -132,17 +132,7 @@ def face_scan_login_controller(request):
     image = request.files.getlist("photos")
     result = verify_identity(image)
 
-    if result.get("status") == 415:
-        return jsonify({
-            "message": result.get("message")
-        }), result.get("status")
-
-    if result.get("status") == 401:
-        return jsonify({
-            "message": result.get("message")
-        }), result.get("status")
-
-    if result.get("status") == 204:
+    if result.get("status") in [415, 401, 204, 422]:
         return jsonify({
             "message": result.get("message")
         }), result.get("status")

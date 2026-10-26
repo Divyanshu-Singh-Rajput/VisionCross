@@ -3,24 +3,62 @@ import jwt
 import os
 from bson import ObjectId
 from bson.errors import InvalidId
-import torch
-import torch.nn.functional as F
-from siameseModel.model import model, preprocess, test_transform, device
+
+import cv2
+import numpy as np
+from siameseModel.run_model import app
+
+def resize_with_pad(image, size=(250, 250)):
+    if image is None:
+        return None
+    
+    h, w = image.shape[:2]
+    sh, sw = size
+    aspect = w / h
+    if aspect > 1:
+        new_w = sw
+        new_h = int(sw / aspect)
+    else:
+        new_h = sh
+        new_w = int(sh * aspect)
+
+    img_resized = cv2.resize(image, (new_w, new_h), interpolation=cv2.INTER_AREA)
+
+    top = (sh - new_h) // 2
+    bottom = sh - new_h - top
+    left = (sw - new_w) // 2
+    right = sw - new_w - left
+
+    img_padded = cv2.copyMakeBorder(img_resized, top, bottom, left, right, cv2.BORDER_CONSTANT, value=[0, 0, 0])
+    return img_padded
 
 def img_to_embedding(images):
     embeddings_list = []
 
-    for image in images:
-        
-        if not image.filename.lower().endswith(('.jpg', '.jpeg', '.png', '.bmp')):
+    for img in images:
+        if not img.filename.lower().endswith(('.jpg', '.jpeg', '.png', '.bmp')):
+            return {
+                "message": "Photo type not supported"
+            }
+
+        img = cv2.imdecode(np.frombuffer(img.read(), np.uint8), cv2.IMREAD_COLOR)
+        if img is None:
             continue
-        
-        processed_img = preprocess(image, transform=test_transform).unsqueeze(0).to(device)
 
-        with torch.no_grad():
-            img_embedding = model(processed_img).squeeze(0).cpu().tolist()
+        img = resize_with_pad(img)
 
-        embeddings_list.append(img_embedding)
+        faces = app.get(img)
+        num_faces = len(faces)
+
+        if num_faces == 0:
+            # continue
+            return -1
+
+        if num_faces > 1:
+            # continue
+            return +1
+
+        embeddings_list.append(faces[0].normed_embedding.tolist())
 
     return embeddings_list
 
@@ -68,6 +106,24 @@ def store_embeddings(request):
 
     embeddings_list = img_to_embedding(images)
 
+    if isinstance(embeddings_list, dict) and embeddings_list.get("message")=="Photo type not supported":
+        return {
+            "message": "Photo type not supported",
+            "status": 415
+        }
+
+    elif embeddings_list == -1:
+        return {
+            "message": "No Face Detected",
+            "status": 422
+        }
+
+    elif embeddings_list == +1:
+        return {
+            "message": "Multiple Faces Detected",
+            "status": 422
+        }
+
     user_embeddings.insert_one({
         "user_id": str(user_id),
         "embeddings_list": embeddings_list
@@ -84,23 +140,32 @@ def store_embeddings(request):
     }
 
 def calculate_distance(input_embedding, val_embedding):
+    input_embedding = np.array(input_embedding)
+    val_embedding = np.array(val_embedding)
 
-    val_embedding = torch.tensor(val_embedding, dtype=torch.float32).unsqueeze(0).to(device)
-    input_embedding = torch.tensor(input_embedding, dtype=torch.float32).unsqueeze(0).to(device)
-
-    dist = F.pairwise_distance(input_embedding, val_embedding, 2).item()
-
-    similarity = 1.0/(1.0 + dist)
+    similarity = np.dot(input_embedding, val_embedding)
 
     return similarity
 
-def verify_identity(image, verification_threshold=0):
+def verify_identity(image, verification_threshold=0.6):
     input_embedding = img_to_embedding(image)
 
-    if not input_embedding:
+    if isinstance(input_embedding, dict) and input_embedding.get("message")=="Photo type not supported":
         return {
             "message": "Photo type not supported",
             "status": 415
+        }
+
+    elif input_embedding == -1:
+        return {
+            "message": "No Face Detected",
+            "status": 422
+        }
+
+    elif input_embedding == +1:
+        return {
+            "message": "Multiple Faces Detected",
+            "status": 422
         }
 
     input_embedding = input_embedding[0]
