@@ -1,6 +1,6 @@
-# VisionCross
+﻿# VisionCross
 
-![Next.js](https://img.shields.io/badge/Next.js-000000?style=flat-square&logo=nextdotjs&logoColor=white) ![React](https://img.shields.io/badge/React-20232A?style=flat-square&logo=react&logoColor=61DAFB) ![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=flat-square&logo=tailwind-css&logoColor=white) ![Python](https://img.shields.io/badge/Python-3776AB?style=flat-square&logo=python&logoColor=white) ![Flask](https://img.shields.io/badge/Flask-000000?style=flat-square&logo=flask&logoColor=white) ![PyTorch](https://img.shields.io/badge/PyTorch-EE4C2C?style=flat-square&logo=pytorch&logoColor=white) ![OpenCV](https://img.shields.io/badge/OpenCV-5C3EE8?style=flat-square&logo=opencv&logoColor=white) ![MongoDB](https://img.shields.io/badge/MongoDB-47A248?style=flat-square&logo=mongodb&logoColor=white) ![JWT](https://img.shields.io/badge/JWT-000000?style=flat-square&logo=jsonwebtokens&logoColor=white) ![Pydantic](https://img.shields.io/badge/Pydantic-E92063?style=flat-square&logo=pydantic&logoColor=white)
+![Next.js](https://img.shields.io/badge/Next.js-000000?style=flat-square&logo=nextdotjs&logoColor=white) ![React](https://img.shields.io/badge/React-20232A?style=flat-square&logo=react&logoColor=61DAFB) ![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=flat-square&logo=tailwind-css&logoColor=white) ![Python](https://img.shields.io/badge/Python-3776AB?style=flat-square&logo=python&logoColor=white) ![Flask](https://img.shields.io/badge/Flask-000000?style=flat-square&logo=flask&logoColor=white) ![InsightFace](https://img.shields.io/badge/InsightFace-buffalo__l-blueviolet?style=flat-square) ![ONNX Runtime](https://img.shields.io/badge/ONNX_Runtime-GPU-blue?style=flat-square&logo=onnx&logoColor=white) ![OpenCV](https://img.shields.io/badge/OpenCV-5C3EE8?style=flat-square&logo=opencv&logoColor=white) ![MongoDB](https://img.shields.io/badge/MongoDB-47A248?style=flat-square&logo=mongodb&logoColor=white) ![JWT](https://img.shields.io/badge/JWT-000000?style=flat-square&logo=jsonwebtokens&logoColor=white) ![Pydantic](https://img.shields.io/badge/Pydantic-E92063?style=flat-square&logo=pydantic&logoColor=white)
 
 ---
 
@@ -10,7 +10,7 @@
 - [Prerequisites](#prerequisites)
 - [Setup & Installation](#setup--installation)
   - [1. Clone the Repository](#1-clone-the-repository)
-  - [2. Backend Setup (Flask & PyTorch)](#2-backend-setup-flask--pytorch)
+  - [2. Backend Setup (Flask & InsightFace)](#2-backend-setup-flask--insightface)
   - [3. Frontend Setup (Next.js & Tailwind CSS)](#3-frontend-setup-nextjs--tailwind-css)
 - [Running the Project](#running-the-project)
 
@@ -21,8 +21,8 @@
 **VisionCross** is an AI-driven biometric clearance and access control gateway. It secures virtual meetings, sensitive sessions, and classified links from unauthorized entry (such as zoombombing or credential leaks) without requiring manual waiting room approval by hosts.
 
 ### Key Highlights
-- **Biometric Authentication**: Powered by a custom PyTorch Siamese Neural Network trained with Triplet Loss to generate 512-dimensional facial embeddings for passwordless face-scan login.
-- **Biometric Enrollment**: Captures 100 face frames via webcam or photo upload to enroll an operative's biometric identity.
+- **Biometric Authentication**: Powered by [InsightFace](https://github.com/deepinsight/insightface)'s `buffalo_l` model pack, combining **SCRFD** (face detection) and **ArcFace / w600k_r50** (face recognition) running via ONNX Runtime for fast, accurate 512-dimensional facial embeddings and passwordless face-scan login.
+- **Biometric Enrollment**: Captures 100 face frames via webcam or photo upload to enroll an operative's biometric identity. Embeddings are stored in MongoDB and matched at login using cosine similarity.
 - **Clearance Tiers**: Enforces multi-level access control (Admin, Top Secret, Secret, Confidential, Restricted). Users only see and access content permitted by their clearance tier.
 - **Intermediary Proxy Gateway**: Protects destination URLs (Zoom, Google Meet, internal documents) behind a step-up biometric or credential verification challenge before issuing an authorized redirect.
 
@@ -34,6 +34,8 @@
 - **Node.js** (18 or higher) & **pnpm** (or npm)
 - **MongoDB** (Local or MongoDB Atlas)
 - **Webcam** (for biometric enrollment and face-scan login)
+- **InsightFace `buffalo_l` model** — downloaded automatically on first run to `C:\Users\<you>\.insightface\models\buffalo_l\` (~270 MB). If auto-download fails, grab `buffalo_l.zip` manually from the [InsightFace model zoo](https://github.com/deepinsight/insightface/releases/tag/v0.7) and extract it into that directory.
+- *(Optional)* **NVIDIA GPU + CUDA 12.x** — the backend uses `onnxruntime-gpu` and automatically falls back to CPU if no CUDA device is detected.
 
 ---
 
@@ -46,19 +48,30 @@ git clone https://github.com/Divyanshu-Singh-Rajput/VisionCross.git
 cd VisionCross
 ```
 
-### 2. Backend Setup (Flask & PyTorch)
+### 2. Backend Setup (Flask & InsightFace)
 
 1. Navigate to the backend directory:
    ```bash
    cd backend
    ```
 
-2. Install Python dependencies:
+2. Create and activate a virtual environment:
+   ```bash
+   python -m venv .venv
+
+   # Windows
+   .venv\Scripts\activate
+
+   # Linux / macOS
+   source .venv/bin/activate
+   ```
+
+3. Install Python dependencies:
    ```bash
    pip install -r requirements.txt
    ```
 
-3. Configure environment variables:
+4. Configure environment variables:
    ```bash
    # Windows
    copy .env.example .env
@@ -72,8 +85,13 @@ cd VisionCross
    MONGO_URI=mongodb://localhost:27017/VisionCross
    ```
 
-4. Verify that the pre-trained model weights file exists at:
-   `backend/siameseModel/siamese_modelv-3.pth`
+5. *(First run only)* The `buffalo_l` model pack downloads automatically on startup. Ensure a stable connection or pre-place the extracted files at:
+   ```
+   C:\Users\<YourUsername>\.insightface\models\buffalo_l\
+   ```
+   The directory must contain at minimum:
+   - `det_10g.onnx` — SCRFD face detection
+   - `w600k_r50.onnx` — ArcFace face recognition
 
 ### 3. Frontend Setup (Next.js & Tailwind CSS)
 
@@ -111,7 +129,7 @@ cd VisionCross
 cd backend
 python app.py
 ```
-*The Flask server runs on `http://localhost:5000`.*
+*The Flask server runs on `http://localhost:5000`. On first start, InsightFace loads the `buffalo_l` ONNX models into memory — this takes a few seconds.*
 
 ### 2. Start the Frontend Application (Next.js)
 
